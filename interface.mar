@@ -1,0 +1,56 @@
+.data
+    	pikachu: .asciiz "(\\_/)\n(o_o)\n/>*<\\\n"
+   	eevee: .asciiz "(\\_/)\n(^-^)\n(\")(\")\n"
+    	quebra: .asciiz "\n"
+    	vida_cheia: .asciiz "="
+    
+    	li $v0, 4          
+	la $a0, pikachu    
+	syscall            
+	
+	li $t0, 0         
+    	li $t1, 10        
+
+loop_vida:
+    	beq $t0, $t1, fim_loop  
+
+    	li $v0, 4
+    	la $a0, vida_cheia      
+    	syscall
+
+    	addi $t0, $t0, 1       
+    	j loop_vida             
+
+fim_loop:
+	$t3, 10
+	div $s0, $t3       
+	mflo $t1         
+	
+	sub $t2, $t3, $t1
+	li $t4, 0
+
+loop_vazio:
+    	beq $t4, $t2, fim_loop_vazio  
+
+    	li $v0, 4
+    	la $a0, vida_vazia  
+    	syscall
+
+    	addi $t4, $t4, 1       
+    	j loop_vazio
+
+fim_loop_vazio:
+	li $t5, 0
+	li $t6, 40
+
+limpa_tela:
+    	beq $t5, $t6, fim_limpa_tela
+
+    	li $v0, 4
+    	la $a0, quebra 
+    	syscall
+
+    	addi $t5, $t5, 1       
+    	j limpa_tela
+
+fim_limpa_tela:
