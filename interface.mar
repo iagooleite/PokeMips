@@ -1,56 +1,113 @@
 .data
-    	pikachu: .asciiz "(\\_/)\n(o_o)\n/>*<\\\n"
-   	eevee: .asciiz "(\\_/)\n(^-^)\n(\")(\")\n"
-    	quebra: .asciiz "\n"
-    	vida_cheia: .asciiz "="
+    # Textos e sprites Eevee
+    nome_eevee: .asciiz "\t\t\tEEVEE\n\t\t\tLv5\n\t\t\tHP: ["
+    fim_nome_eevee: .asciiz "]\n"
+    eevee: .asciiz "\t\t\t(\\_/)\n\t\t\t(^-^)\n\t\t\t(\")(\")\n\n"
     
-    	li $v0, 4          
-	la $a0, pikachu    
-	syscall            
-	
-	li $t0, 0         
-    	li $t1, 10        
+    # Textos e sprites Pikachu
+    # Dica: ajustei os espaços iniciais para alinhar as orelhas e o corpo do Pikachu!
+    pikachu: .asciiz "  (\\_/)\t\tPIKACHU\n  (o.o)\t\tLv5\n  />*<\\\tHP: ["
+    pikachu_fim: .asciiz "] 19/19\n==========================================\n  1 - FIGHT           3 - PKMN\n  2 - ITEM            4 - RUN\n==========================================\n> Digite sua acao: "
+    
+    # Caracteres da barra de vida
+    vida_cheia: .asciiz "="
+    vida_vazia: .asciiz " "
 
-loop_vida:
-    	beq $t0, $t1, fim_loop  
+.text
+main:
+    # ====================================================
+    # METADE SUPERIOR: EEVEE
+    # ====================================================
+    li $s0, 60         # $s0 = HP atual do Eevee (60)
 
-    	li $v0, 4
-    	la $a0, vida_cheia      
-    	syscall
+    # Imprime o nome e a abertura da barra "[ "
+    li $v0, 4
+    la $a0, nome_eevee
+    syscall
 
-    	addi $t0, $t0, 1       
-    	j loop_vida             
+    # Cálculos da barra
+    li $t3, 10         # Tamanho máximo da barra
+    div $s0, $t3       
+    mflo $t1           # $t1 = Blocos cheios
+    sub $t2, $t3, $t1  # $t2 = Blocos vazios
 
-fim_loop:
-	$t3, 10
-	div $s0, $t3       
-	mflo $t1         
-	
-	sub $t2, $t3, $t1
-	li $t4, 0
+loop_vida_eevee:
+    beq $t0, $t1, fim_loop_vida_eevee
+    li $v0, 4
+    la $a0, vida_cheia
+    syscall
+    addi $t0, $t0, 1
+    j loop_vida_eevee
+    
+fim_loop_vida_eevee:
 
-loop_vazio:
-    	beq $t4, $t2, fim_loop_vazio  
+    li $t4, 0        
+      
+loop_vazio_eevee:
+    beq $t4, $t2, fim_loop_vazio_eevee
+    li $v0, 4
+    la $a0, vida_vazia
+    syscall
+    addi $t4, $t4, 1
+    j loop_vazio_eevee
+    
+fim_loop_vazio_eevee:
 
-    	li $v0, 4
-    	la $a0, vida_vazia  
-    	syscall
+    # Imprime fechamento da barra e sprite do Eevee
+    li $v0, 4
+    la $a0, fim_nome_eevee
+    syscall
 
-    	addi $t4, $t4, 1       
-    	j loop_vazio
+    li $v0, 4
+    la $a0, eevee
+    syscall
 
-fim_loop_vazio:
-	li $t5, 0
-	li $t6, 40
+    # ====================================================
+    # METADE INFERIOR: PIKACHU
+    # ====================================================
+    li $s1, 100        # $s1 = HP atual do Pikachu (100 = barra cheia)
 
-limpa_tela:
-    	beq $t5, $t6, fim_limpa_tela
+    # Imprime o sprite e informações até a abertura da barra "["
+    li $v0, 4
+    la $a0, pikachu
+    syscall
 
-    	li $v0, 4
-    	la $a0, quebra 
-    	syscall
+    # Cálculos da barra (reaproveitando $t3 que já tem o valor 10)
+    div $s1, $t3       
+    mflo $t1           # $t1 = Blocos cheios Pikachu
+    sub $t2, $t3, $t1  # $t2 = Blocos vazios Pikachu
 
-    	addi $t5, $t5, 1       
-    	j limpa_tela
+    li $t0, 0          # Zera o contador de cheios
+    
+loop_vida_pika:
+    beq $t0, $t1, fim_loop_vida_pika
+    li $v0, 4
+    la $a0, vida_cheia
+    syscall
+    addi $t0, $t0, 1
+    j loop_vida_pika
+    
+fim_loop_vida_pika:
 
-fim_limpa_tela:
+    li $t4, 0          # Zera o contador de vazios
+    
+loop_vazio_pika:
+    beq $t4, $t2, fim_loop_vazio_pika
+    li $v0, 4
+    la $a0, vida_vazia
+    syscall
+    addi $t4, $t4, 1
+    j loop_vazio_pika
+    
+fim_loop_vazio_pika:
+
+    # Imprime fechamento da barra e o Menu de Ações
+    li $v0, 4
+    la $a0, pikachu_fim
+    syscall
+
+    # ====================================================
+    # FIM DO PROGRAMA
+    # ====================================================
+    li $v0, 10
+    syscall
