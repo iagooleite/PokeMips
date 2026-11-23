@@ -1,0 +1,1061 @@
+.data
+    tela: .space 16384          # tela do Bitmap Display (64x64 pixels): tem que ser o 1o item do .data
+
+    j1_pp: .word 15             # PP de cada jogador
+    j2_pp: .word 15
+
+    modo_jogo: .word 1          # 1 = Jogador vs Jogador | 2 = Jogador vs IA
+
+    j1_especie: .word 0         # Pokemon escolhido (posicao nos vetores)
+    j2_especie: .word 0
+
+    escolha_j1: .word 0         # acao escolhida no turno
+    escolha_j2: .word 0
+
+    num_pokemon: .word 5
+
+    nome_pikachu:    .asciiz "PIKACHU"
+    nome_eevee:      .asciiz "EEVEE"
+    nome_charmander: .asciiz "CHARMANDER"
+    nome_squirtle:   .asciiz "SQUIRTLE"
+    nome_bulbasaur:  .asciiz "BULBASAUR"
+
+    g_choque:    .asciiz "Choque do Trovao"
+    g_cauda:     .asciiz "Cauda de Ferro"
+    g_investida: .asciiz "Investida"
+    g_mordida:   .asciiz "Mordida"
+    g_arranhao:  .asciiz "Arranhao"
+    g_brasas:    .asciiz "Brasas"
+    g_jato:      .asciiz "Jato de Agua"
+    g_chicote:   .asciiz "Chicote de Vinha"
+
+    d_protecao:  .asciiz "Protecao"
+    d_areia:     .asciiz "Ataque de Areia"
+    d_fumaca:    .asciiz "Cortina de Fumaca"
+    d_recolher:  .asciiz "Recolher"
+
+    i_oran:      .asciiz "Fruta Oran"
+    i_pocao:     .asciiz "Pocao"
+
+    paleta: .word 0x00000000, 0x00202020, 0x00FFFFFF, 0x00FFD84A # cores no formato 0x00RRGGBB
+            .word 0x00E83A3A, 0x00B07840, 0x00F2DDB0, 0x00F59A3A
+            .word 0x0066B3E8, 0x007A5230, 0x0070C8A8, 0x003E9A4E
+            .word 0x00FFC830
+
+    cor_atual: .word 0          # cor usada por desenha_retangulo
+
+    bmp_pikachu:                # sprite 16x16: cada numero e uma cor da paleta (0 = transparente)
+        .byte  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1
+        .byte  1,  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  1
+        .byte  1,  3,  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  3,  1
+        .byte  0,  1,  3,  1,  0,  0,  0,  0,  0,  0,  0,  0,  1,  3,  1,  0
+        .byte  0,  1,  3,  3,  1,  0,  0,  0,  0,  0,  0,  1,  3,  3,  1,  0
+        .byte  0,  0,  1,  3,  3,  1,  1,  1,  1,  1,  1,  3,  3,  1,  0,  0
+        .byte  0,  0,  1,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  1,  0,  0
+        .byte  0,  1,  3,  3,  1,  3,  3,  3,  3,  3,  3,  1,  3,  3,  1,  0
+        .byte  0,  1,  3,  3,  1,  3,  3,  3,  3,  3,  3,  1,  3,  3,  1,  0
+        .byte  0,  1,  4,  4,  3,  3,  3,  1,  1,  3,  3,  3,  4,  4,  1,  0
+        .byte  0,  1,  4,  4,  3,  3,  3,  3,  3,  3,  3,  3,  4,  4,  1,  0
+        .byte  0,  0,  1,  3,  3,  3,  1,  3,  3,  1,  3,  3,  3,  1,  0,  0
+        .byte  0,  0,  1,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  1,  0,  0
+        .byte  0,  0,  0,  1,  3,  3,  3,  3,  3,  3,  3,  3,  1,  0,  0,  0
+        .byte  0,  0,  0,  1,  3,  3,  1,  0,  0,  1,  3,  3,  1,  0,  0,  0
+        .byte  0,  0,  0,  0,  1,  1,  0,  0,  0,  0,  1,  1,  0,  0,  0,  0
+
+    bmp_eevee:
+        .byte  0,  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  0
+        .byte  1,  5,  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  5,  1
+        .byte  1,  5,  5,  1,  0,  0,  0,  0,  0,  0,  0,  0,  1,  5,  5,  1
+        .byte  1,  5,  5,  5,  1,  0,  0,  0,  0,  0,  0,  1,  5,  5,  5,  1
+        .byte  0,  1,  5,  5,  5,  1,  1,  1,  1,  1,  1,  5,  5,  5,  1,  0
+        .byte  0,  0,  1,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  1,  0,  0
+        .byte  0,  1,  5,  5,  1,  5,  5,  5,  5,  5,  5,  1,  5,  5,  1,  0
+        .byte  0,  1,  5,  5,  1,  5,  5,  5,  5,  5,  5,  1,  5,  5,  1,  0
+        .byte  0,  1,  5,  5,  5,  5,  5,  1,  1,  5,  5,  5,  5,  5,  1,  0
+        .byte  0,  0,  1,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  1,  0,  0
+        .byte  0,  1,  6,  6,  1,  5,  5,  5,  5,  5,  5,  1,  6,  6,  1,  0
+        .byte  1,  6,  6,  6,  6,  6,  5,  5,  5,  5,  6,  6,  6,  6,  6,  1
+        .byte  0,  1,  6,  6,  6,  6,  6,  6,  6,  6,  6,  6,  6,  6,  1,  0
+        .byte  0,  0,  1,  5,  5,  5,  1,  5,  5,  1,  5,  5,  5,  1,  0,  0
+        .byte  0,  0,  1,  5,  5,  1,  0,  0,  0,  0,  1,  5,  5,  1,  0,  0
+        .byte  0,  0,  0,  1,  1,  0,  0,  0,  0,  0,  0,  1,  1,  0,  0,  0
+
+    bmp_charmander:
+        .byte  0,  0,  0,  0,  1,  1,  1,  1,  1,  1,  0,  0,  0,  0,  0,  0
+        .byte  0,  0,  0,  1,  7,  7,  7,  7,  7,  7,  1,  0,  0,  0,  0,  0
+        .byte  0,  0,  1,  7,  7,  7,  7,  7,  7,  7,  7,  1,  0,  0,  0,  0
+        .byte  0,  0,  1,  7,  7,  1,  7,  7,  1,  7,  7,  7,  1,  0,  0,  0
+        .byte  0,  0,  1,  7,  7,  1,  7,  7,  1,  7,  7,  7,  1,  0,  0,  0
+        .byte  0,  0,  1,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  1,  0,  0
+        .byte  0,  0,  0,  1,  7,  7,  7,  7,  7,  7,  7,  7,  1,  0,  0,  0
+        .byte  0,  0,  0,  0,  1,  7,  7,  1,  1,  7,  7,  1,  0,  0, 12,  0
+        .byte  0,  0,  0,  1,  7,  7,  1,  6,  6,  1,  7,  7,  1, 12, 12, 12
+        .byte  0,  0,  1,  7,  7,  1,  6,  6,  6,  6,  1,  7,  1, 12, 12, 12
+        .byte  0,  0,  1,  7,  1,  6,  6,  6,  6,  6,  6,  1,  7,  1, 12,  0
+        .byte  0,  0,  0,  1,  1,  6,  6,  6,  6,  6,  6,  1,  7,  1,  0,  0
+        .byte  0,  0,  0,  0,  1,  6,  6,  6,  6,  6,  6,  1,  7,  7,  1,  0
+        .byte  0,  0,  0,  0,  1,  7,  7,  1,  1,  7,  7,  1,  0,  1,  0,  0
+        .byte  0,  0,  0,  1,  7,  7,  7,  1,  0,  1,  7,  7,  7,  1,  0,  0
+        .byte  0,  0,  0,  1,  1,  1,  1,  0,  0,  0,  1,  1,  1,  1,  0,  0
+
+    bmp_squirtle:
+        .byte  0,  0,  0,  0,  0,  1,  1,  1,  1,  1,  1,  0,  0,  0,  0,  0
+        .byte  0,  0,  0,  0,  1,  8,  8,  8,  8,  8,  8,  1,  0,  0,  0,  0
+        .byte  0,  0,  0,  1,  8,  8,  8,  8,  8,  8,  8,  8,  1,  0,  0,  0
+        .byte  0,  0,  0,  1,  8,  8,  1,  8,  8,  1,  8,  8,  1,  0,  0,  0
+        .byte  0,  0,  0,  1,  8,  8,  1,  8,  8,  1,  8,  8,  1,  0,  0,  0
+        .byte  0,  0,  0,  1,  8,  8,  8,  8,  8,  8,  8,  8,  1,  0,  0,  0
+        .byte  0,  0,  0,  0,  1,  8,  8,  1,  1,  8,  8,  1,  0,  0,  0,  0
+        .byte  0,  0,  0,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  0,  0,  0
+        .byte  0,  0,  1,  9,  1,  6,  6,  6,  6,  6,  6,  1,  9,  1,  0,  0
+        .byte  0,  1,  8,  1,  9,  6,  6,  6,  6,  6,  6,  9,  1,  8,  1,  0
+        .byte  0,  1,  8,  1,  9,  6,  6,  6,  6,  6,  6,  9,  1,  8,  1,  0
+        .byte  0,  0,  1,  9,  1,  6,  6,  6,  6,  6,  6,  1,  9,  1,  0,  0
+        .byte  0,  0,  1,  9,  9,  1,  1,  1,  1,  1,  1,  9,  9,  1,  8,  1
+        .byte  0,  0,  0,  1,  8,  8,  1,  0,  0,  1,  8,  8,  1,  8,  8,  1
+        .byte  0,  0,  0,  1,  8,  8,  1,  0,  0,  1,  8,  8,  1,  1,  0,  0
+        .byte  0,  0,  0,  0,  1,  1,  0,  0,  0,  0,  1,  1,  0,  0,  0,  0
+
+    bmp_bulbasaur:
+        .byte  0,  0,  0,  0,  0,  0,  1,  1,  1,  1,  0,  0,  0,  0,  0,  0
+        .byte  0,  0,  0,  0,  1,  1, 11, 11, 11, 11,  1,  1,  0,  0,  0,  0
+        .byte  0,  0,  0,  1, 11, 11, 11, 11, 11, 11, 11, 11,  1,  0,  0,  0
+        .byte  0,  0,  0,  1, 11, 11,  1, 11, 11,  1, 11, 11,  1,  0,  0,  0
+        .byte  0,  0,  1, 10, 10,  1, 11, 11, 11, 11, 11, 11,  1,  0,  0,  0
+        .byte  0,  1, 10, 10, 10, 10,  1,  1,  1,  1,  1,  1, 10,  1,  0,  0
+        .byte  1, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,  1,  0,  0
+        .byte  1, 10,  1,  1, 10, 10, 10, 10,  1,  1, 10, 10, 10,  1,  0,  0
+        .byte  1, 10,  2,  4, 10, 10, 10, 10,  2,  4, 10, 10, 10,  1,  0,  0
+        .byte  1, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,  1,  0,  0
+        .byte  0,  1, 10, 10, 10,  1,  1,  1,  1, 10, 10, 10, 10,  1,  0,  0
+        .byte  0,  0,  1, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,  1,  0,  0
+        .byte  0,  0,  1, 10, 10,  1, 10, 10, 10, 10,  1, 10, 10,  1,  0,  0
+        .byte  0,  0,  1, 10, 10,  1,  0,  0,  0,  0,  1, 10, 10,  1,  0,  0
+        .byte  0,  0,  1,  1,  1,  0,  0,  0,  0,  0,  1,  1,  1,  0,  0,  0
+        .byte  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0
+
+    vet_nome:   .word nome_pikachu, nome_eevee, nome_charmander, nome_squirtle, nome_bulbasaur # vetores: 0 Pikachu | 1 Eevee | 2 Charmander | 3 Squirtle | 4 Bulbasaur
+    vet_bitmap: .word bmp_pikachu, bmp_eevee, bmp_charmander, bmp_squirtle, bmp_bulbasaur # endereco do sprite de cada Pokemon
+    vet_golpe1: .word g_choque, g_investida, g_arranhao, g_investida, g_investida
+    vet_golpe2: .word g_cauda, g_mordida, g_brasas, g_jato, g_chicote
+    vet_defesa: .word d_protecao, d_areia, d_fumaca, d_recolher, d_protecao
+    vet_item:   .word i_oran, i_pocao, i_oran, i_pocao, i_oran
+
+    vida_cheia: .asciiz "="
+    vida_vazia: .asciiz " "
+
+    clear_screen: .asciiz "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n" # 'limpa' o console com quebras de linha
+
+    indent_j2:    .asciiz "\t\t\t"
+    indent_j1:    .asciiz "  "
+    txt_lv_j1:    .asciiz "  Lv5  (Jogador 1)\n"
+    txt_lv_j2:    .asciiz "  Lv5  (Jogador 2)\n"
+    txt_lv_ia:    .asciiz "  Lv5  (IA)\n"
+    txt_hp_abre:  .asciiz "HP: ["
+    txt_hp_fecha: .asciiz "] "
+    txt_hp_max:   .asciiz "/100\n"
+    separador:    .asciiz "==========================================\n"
+    quebra_linha: .asciiz "\n"
+
+    msg_modo: .asciiz "Escolha o modo de jogo:\n\n  1 - Jogador vs Jogador\n  2 - Jogador vs IA\n"
+
+    msg_escolha_1:   .asciiz "Jogador "
+    msg_escolha_2:   .asciiz ", escolha seu Pokemon:\n\n"
+    txt_item_lista:  .asciiz "  "
+    txt_traco:       .asciiz " - "
+    msg_sua_escolha: .asciiz "\nSua escolha: "
+
+    msg_turno_1: .asciiz "\n> VEZ DO JOGADOR "
+    msg_turno_2: .asciiz " ("
+    msg_turno_3: .asciiz ") | PP Restante: "
+    txt_op1:     .asciiz "\n  1 - "
+    txt_op2:     .asciiz " (20 Dano)\n  2 - "
+    txt_op3:     .asciiz " (35 Dano) [-1 PP]\n  3 - "
+    txt_op4:     .asciiz " (Bloqueia o ataque do oponente) [-1 PP]\n  4 - "
+    txt_op_fim:  .asciiz " (Cura 30 HP - 1x)\nEscolha sua acao: "
+
+    msg_erro_input:    .asciiz "\n[ERRO] Opcao invalida! Tente novamente: "
+    msg_erro_item:     .asciiz "\n[ERRO] Este item ja foi utilizado nesta batalha!\n"
+    msg_erro_pp:       .asciiz "\n[ERRO] Pontos de Poder (PP) insuficientes para esta acao!\n"
+    msg_erro_hp_cheio: .asciiz "\n[ERRO] O HP ja esta cheio! O item seria desperdicado.\n"
+
+    log_inicio:    .asciiz "[LOG] J"
+    log_inicio_ia: .asciiz "[LOG] IA"
+    log_usou:      .asciiz " usou "
+    log_dano20:    .asciiz "! (-20 HP no oponente)\n"
+    log_dano35:    .asciiz "! (-35 HP no oponente)\n"
+    log_defesa:    .asciiz "!\n"
+    log_item:      .asciiz " e recuperou saude!\n"
+    log_bloqueado: .asciiz ", mas o oponente se defendeu! (0 Dano)\n"
+
+    msg_vitoria_1:  .asciiz "\n==========================================\n   JOGADOR "
+    msg_vitoria_2:  .asciiz ") VENCEU A BATALHA!\n==========================================\n"
+    msg_vitoria_ia: .asciiz "\n==========================================\n   A IA"
+    msg_empate:     .asciiz "\n==========================================\n    AMBOS CAIRAM! A BATALHA EMPATOU!\n==========================================\n"
+
+    buffer_input: .space 4      # guarda o texto digitado
+
+.text
+main:
+    li $s0, 100                 # $s0 = HP do Jogador 2 (cima)
+    li $s1, 100                 # $s1 = HP do Jogador 1 (baixo)
+
+    li $s2, 0                   # $s2 = log do J1 (1 golpe1, 2 golpe2, 3 defesa, 4 item, 5/6 bloqueado)
+    li $s3, 0                   # $s3 = log do J2 (mesmos codigos)
+
+    li $s6, 1                   # $s6 = item do J1 (1 = disponivel, 0 = usado)
+    li $s7, 1                   # $s7 = item do J2 (1 = disponivel, 0 = usado)
+
+    li $v0, 4
+    la $a0, clear_screen
+    syscall
+    li $v0, 4
+    la $a0, msg_modo
+    syscall
+    li $v0, 4
+    la $a0, msg_sua_escolha
+    syscall
+
+    li $a0, 1
+    li $a1, 2
+    jal le_opcao                # le o modo (so aceita 1 ou 2)
+    sw $v0, modo_jogo
+
+    li $a0, 1
+    jal escolhe_pokemon
+    sw $v0, j1_especie
+
+    lw $t0, modo_jogo
+    beq $t0, 2, ia_escolhe_pokemon
+
+    li $a0, 2
+    jal escolhe_pokemon
+    sw $v0, j2_especie
+    j loop_batalha
+
+ia_escolhe_pokemon:
+    li $v0, 42                  # syscall 42: sorteia um numero de 0 a $a1 - 1
+    li $a0, 0                   # gerador 0
+    lw $a1, num_pokemon         # 5 Pokemon -> sorteia de 0 a 4
+    syscall
+    sw $a0, j2_especie          # o numero sorteado volta em $a0
+    j loop_batalha
+
+loop_batalha:                   # inicio de cada turno
+    jal render_tela             # desenha o console e o Bitmap Display
+
+    beq $s0, 0, check_empate_tela # HP do J2 zerou? confere empate
+    beq $s1, 0, vitoria_j2
+    j coleta_de_inputs          # ninguem caiu: segue o jogo
+
+check_empate_tela:
+    beq $s1, 0, tela_empate
+    j vitoria_j1
+
+coleta_de_inputs:
+input_j1:
+    li $a0, 1
+    lw $a1, j1_especie
+    lw $a2, j1_pp
+    jal imprime_menu            # mostra os golpes do Pokemon do J1
+
+    li $a0, 1
+    li $a1, 4
+    jal le_opcao                # le a acao (so aceita 1 a 4)
+    move $t8, $v0
+    sw $t8, escolha_j1          # guarda a escolha na memoria
+
+    beq $t8, 1, prepara_j2
+    beq $t8, 4, check_item_j1
+    j check_pp_j1
+
+check_pp_j1:
+    lw $t5, j1_pp
+    blez $t5, erro_pp_j1
+    subi $t5, $t5, 1            # gasta 1 PP
+    sw $t5, j1_pp
+    j prepara_j2
+
+check_item_j1:
+    beq $s6, 0, erro_item_j1
+    beq $s1, 100, erro_hp_cheio_j1
+    j prepara_j2
+
+erro_item_j1:
+    li $v0, 4
+    la $a0, msg_erro_item
+    syscall
+    j input_j1
+
+erro_pp_j1:
+    li $v0, 4
+    la $a0, msg_erro_pp
+    syscall
+    j input_j1
+
+erro_hp_cheio_j1:
+    li $v0, 4
+    la $a0, msg_erro_hp_cheio
+    syscall
+    j input_j1
+
+prepara_j2:
+    lw $t0, modo_jogo
+    beq $t0, 2, vez_da_ia       # no modo IA, a IA escolhe sozinha
+    jal render_tela             # limpa a tela para esconder a escolha do J1
+
+input_j2:
+    li $a0, 2
+    lw $a1, j2_especie
+    lw $a2, j2_pp
+    jal imprime_menu
+
+    li $a0, 1
+    li $a1, 4
+    jal le_opcao
+    move $t9, $v0
+    sw $t9, escolha_j2
+
+    beq $t9, 1, fase_de_resolucao
+    beq $t9, 4, check_item_j2
+    j check_pp_j2
+
+check_pp_j2:
+    lw $t6, j2_pp
+    blez $t6, erro_pp_j2
+    subi $t6, $t6, 1            # gasta 1 PP
+    sw $t6, j2_pp
+    j fase_de_resolucao
+
+check_item_j2:
+    beq $s7, 0, erro_item_j2
+    beq $s0, 100, erro_hp_cheio_j2
+    j fase_de_resolucao
+
+erro_item_j2:
+    li $v0, 4
+    la $a0, msg_erro_item
+    syscall
+    j input_j2
+
+erro_pp_j2:
+    li $v0, 4
+    la $a0, msg_erro_pp
+    syscall
+    j input_j2
+
+erro_hp_cheio_j2:
+    li $v0, 4
+    la $a0, msg_erro_hp_cheio
+    syscall
+    j input_j2
+
+vez_da_ia:                      # a IA sorteia a acao; se nao puder usar, sorteia de novo
+    li $v0, 42                  # sorteia a acao da IA
+    li $a0, 0                   # gerador 0
+    li $a1, 4                   # sorteia de 0 a 3
+    syscall
+    addi $t9, $a0, 1            # 0..3 -> acao 1..4
+
+    beq $t9, 1, ia_confirma
+    beq $t9, 4, check_item_ia
+    j check_pp_ia
+
+check_pp_ia:
+    lw $t6, j2_pp
+    blez $t6, vez_da_ia         # sem PP: sorteia de novo
+    subi $t6, $t6, 1            # gasta 1 PP
+    sw $t6, j2_pp
+    j ia_confirma
+
+check_item_ia:
+    beq $s7, 0, vez_da_ia       # item ja usado: sorteia de novo
+    beq $s0, 100, vez_da_ia     # HP cheio: sorteia de novo
+    j ia_confirma
+
+ia_confirma:
+    sw $t9, escolha_j2
+    j fase_de_resolucao
+
+fase_de_resolucao:              # aplica defesas, itens e ataques
+    lw $t8, escolha_j1          # recarrega as escolhas da memoria
+    lw $t9, escolha_j2
+
+    li $s4, 0                   # zera a defesa do J1
+    li $s5, 0                   # zera a defesa do J2
+
+    beq $t8, 3, j1_set_defesa
+    beq $t8, 4, j1_set_item
+    j check_j2_def_item
+
+j1_set_defesa:
+    li $s4, 1
+    li $s2, 3
+    j check_j2_def_item
+j1_set_item:
+    li $s6, 0
+    addi $s1, $s1, 30
+    ble $s1, 100, ok_item_j1
+    li $s1, 100
+ok_item_j1:
+    li $s2, 4
+
+check_j2_def_item:
+    beq $t9, 3, j2_set_defesa
+    beq $t9, 4, j2_set_item
+    j processa_ataques
+
+j2_set_defesa:
+    li $s5, 1
+    li $s3, 3
+    j processa_ataques
+j2_set_item:
+    li $s7, 0
+    addi $s0, $s0, 30
+    ble $s0, 100, ok_item_j2
+    li $s0, 100
+ok_item_j2:
+    li $s3, 4
+
+processa_ataques:
+    beq $t8, 1, j1_usa_atk1
+    beq $t8, 2, j1_usa_atk2
+    j processa_ataques_j2
+
+j1_usa_atk1:
+    beq $s5, 1, j1_bloqueado_atk1
+    subi $s0, $s0, 20
+    li $s2, 1
+    j processa_ataques_j2
+j1_usa_atk2:
+    beq $s5, 1, j1_bloqueado_atk2
+    subi $s0, $s0, 35
+    li $s2, 2
+    j processa_ataques_j2
+j1_bloqueado_atk1:
+    li $s2, 5
+    j processa_ataques_j2
+j1_bloqueado_atk2:
+    li $s2, 6
+
+processa_ataques_j2:
+    beq $t9, 1, j2_usa_atk1
+    beq $t9, 2, j2_usa_atk2
+    j finaliza_turno
+
+j2_usa_atk1:
+    beq $s4, 1, j2_bloqueado_atk1
+    subi $s1, $s1, 20
+    li $s3, 1
+    j finaliza_turno
+j2_usa_atk2:
+    beq $s4, 1, j2_bloqueado_atk2
+    subi $s1, $s1, 35
+    li $s3, 2
+    j finaliza_turno
+j2_bloqueado_atk1:
+    li $s3, 5
+    j finaliza_turno
+j2_bloqueado_atk2:
+    li $s3, 6
+
+finaliza_turno:                 # impede HP negativo
+    bge $s0, 0, checa_hp_j1
+    li $s0, 0
+checa_hp_j1:
+    bge $s1, 0, volta_loop
+    li $s1, 0
+
+volta_loop:
+    j loop_batalha
+
+vitoria_j1:
+    li $a0, 1
+    lw $a1, j1_especie
+    jal tela_vitoria
+    j fim_programa
+
+vitoria_j2:
+    li $a0, 2
+    lw $a1, j2_especie
+    jal tela_vitoria
+    j fim_programa
+
+tela_empate:
+    li $v0, 4
+    la $a0, msg_empate
+    syscall
+
+fim_programa:
+    li $v0, 10                  # encerra o programa
+    syscall
+
+escolhe_pokemon:                # $a0 = jogador -> $v0 = Pokemon escolhido (0 a 4)
+    addi $sp, $sp, -4           # abre espaco na pilha
+    sw $ra, 0($sp)              # salva o endereco de retorno
+
+    move $t0, $a0               # $t0 = numero do jogador
+
+    li $v0, 4
+    la $a0, clear_screen
+    syscall
+    li $v0, 4
+    la $a0, msg_escolha_1
+    syscall
+    li $v0, 1
+    move $a0, $t0
+    syscall
+    li $v0, 4
+    la $a0, msg_escolha_2
+    syscall
+
+    li $t1, 0                   # $t1 = posicao da lista
+    lw $t2, num_pokemon
+loop_lista:
+    beq $t1, $t2, fim_lista
+    li $v0, 4
+    la $a0, txt_item_lista
+    syscall
+    li $v0, 1
+    addi $a0, $t1, 1            # mostra 1 a 5 em vez de 0 a 4
+    syscall
+    li $v0, 4
+    la $a0, txt_traco
+    syscall
+    sll $t3, $t1, 2             # posicao * 4
+    la $t4, vet_nome
+    add $t4, $t4, $t3
+    lw $a0, 0($t4)
+    li $v0, 4
+    syscall
+    li $v0, 4
+    la $a0, quebra_linha
+    syscall
+    addi $t1, $t1, 1
+    j loop_lista
+fim_lista:
+    li $v0, 4
+    la $a0, msg_sua_escolha
+    syscall
+
+    li $a0, 1
+    lw $a1, num_pokemon
+    jal le_opcao
+    subi $v0, $v0, 1            # opcao 1..5 -> posicao 0..4
+
+    lw $ra, 0($sp)              # recupera o endereco de retorno
+    addi $sp, $sp, 4            # devolve o espaco da pilha
+    jr $ra
+
+le_opcao:                       # $a0 = minimo, $a1 = maximo -> $v0 = opcao valida
+    move $t6, $a0               # $t6 = minimo
+    move $t7, $a1               # $t7 = maximo
+ler_de_novo:
+    li $v0, 8                   # le o que foi digitado como texto
+    la $a0, buffer_input
+    li $a1, 4
+    syscall
+    la $t0, buffer_input
+    lb $t1, 1($t0)              # 2o caractere tem que ser o ENTER (10)
+    bne $t1, 10, opcao_invalida
+    lb $t1, 0($t0)
+    subi $t1, $t1, 48           # converte o caractere '1' no numero 1
+    blt $t1, $t6, opcao_invalida
+    bgt $t1, $t7, opcao_invalida
+    move $v0, $t1
+    jr $ra
+opcao_invalida:
+    li $v0, 4
+    la $a0, msg_erro_input
+    syscall
+    j ler_de_novo
+
+imprime_menu:                   # $a0 = jogador, $a1 = Pokemon, $a2 = PP
+    move $t0, $a0
+    sll $t1, $a1, 2             # posicao * 4
+    move $t2, $a2
+
+    li $v0, 4
+    la $a0, msg_turno_1
+    syscall
+    li $v0, 1
+    move $a0, $t0
+    syscall
+    li $v0, 4
+    la $a0, msg_turno_2
+    syscall
+    la $t3, vet_nome
+    add $t3, $t3, $t1
+    lw $a0, 0($t3)
+    li $v0, 4
+    syscall
+    li $v0, 4
+    la $a0, msg_turno_3
+    syscall
+    li $v0, 1
+    move $a0, $t2
+    syscall
+
+    li $v0, 4
+    la $a0, txt_op1
+    syscall
+    la $t3, vet_golpe1
+    add $t3, $t3, $t1
+    lw $a0, 0($t3)
+    li $v0, 4
+    syscall
+
+    li $v0, 4
+    la $a0, txt_op2
+    syscall
+    la $t3, vet_golpe2
+    add $t3, $t3, $t1
+    lw $a0, 0($t3)
+    li $v0, 4
+    syscall
+
+    li $v0, 4
+    la $a0, txt_op3
+    syscall
+    la $t3, vet_defesa
+    add $t3, $t3, $t1
+    lw $a0, 0($t3)
+    li $v0, 4
+    syscall
+
+    li $v0, 4
+    la $a0, txt_op4
+    syscall
+    la $t3, vet_item
+    add $t3, $t3, $t1
+    lw $a0, 0($t3)
+    li $v0, 4
+    syscall
+
+    li $v0, 4
+    la $a0, txt_op_fim
+    syscall
+    jr $ra
+
+render_tela:                    # redesenha o console e o Bitmap Display
+    addi $sp, $sp, -4           # abre espaco na pilha
+    sw $ra, 0($sp)              # salva o endereco de retorno
+
+    li $v0, 4
+    la $a0, clear_screen
+    syscall
+
+    li $v0, 4
+    la $a0, indent_j2
+    syscall
+    lw $a0, j2_especie
+    jal imprime_nome
+    la $a0, txt_lv_j2
+    lw $t0, modo_jogo
+    bne $t0, 2, imprime_lv_j2
+    la $a0, txt_lv_ia           # no modo IA, mostra (IA) no lugar de (Jogador 2)
+imprime_lv_j2:
+    li $v0, 4
+    syscall
+    li $v0, 4
+    la $a0, indent_j2
+    syscall
+    move $a0, $s0
+    jal desenha_barra
+    li $v0, 4
+    la $a0, quebra_linha
+    syscall
+
+    li $v0, 4
+    la $a0, indent_j1
+    syscall
+    lw $a0, j1_especie
+    jal imprime_nome
+    li $v0, 4
+    la $a0, txt_lv_j1
+    syscall
+    li $v0, 4
+    la $a0, indent_j1
+    syscall
+    move $a0, $s1
+    jal desenha_barra
+    li $v0, 4
+    la $a0, separador
+    syscall
+
+    move $a0, $s0
+    move $a1, $s1
+    jal desenha_cena            # atualiza o Bitmap Display
+
+    li $a0, 1
+    move $a1, $s2
+    lw $a2, j1_especie
+    jal imprime_log
+    li $a0, 2
+    move $a1, $s3
+    lw $a2, j2_especie
+    jal imprime_log
+
+    lw $ra, 0($sp)              # recupera o endereco de retorno
+    addi $sp, $sp, 4            # devolve o espaco da pilha
+    jr $ra
+
+desenha_barra:                  # $a0 = HP -> imprime a barra de texto
+    move $t0, $a0               # $t0 = HP
+
+    li $v0, 4
+    la $a0, txt_hp_abre
+    syscall
+
+    li $t3, 10
+    addi $t1, $t0, 9            # HP + 9: arredonda para cima
+    div $t1, $t3
+    mflo $t1                    # $t1 = blocos cheios
+    sub $t2, $t3, $t1           # $t2 = blocos vazios
+
+    li $t4, 0
+loop_vida_cheia:
+    beq $t4, $t1, fim_loop_vida_cheia
+    li $v0, 4
+    la $a0, vida_cheia
+    syscall
+    addi $t4, $t4, 1
+    j loop_vida_cheia
+fim_loop_vida_cheia:
+    li $t4, 0
+loop_vida_vazia:
+    beq $t4, $t2, fim_loop_vida_vazia
+    li $v0, 4
+    la $a0, vida_vazia
+    syscall
+    addi $t4, $t4, 1
+    j loop_vida_vazia
+fim_loop_vida_vazia:
+    li $v0, 4
+    la $a0, txt_hp_fecha
+    syscall
+    li $v0, 1
+    move $a0, $t0
+    syscall
+    li $v0, 4
+    la $a0, txt_hp_max
+    syscall
+    jr $ra
+
+imprime_nome:                   # $a0 = Pokemon -> imprime o nome
+    sll $t0, $a0, 2
+    la $t1, vet_nome
+    add $t1, $t1, $t0
+    lw $a0, 0($t1)
+    li $v0, 4
+    syscall
+    jr $ra
+
+imprime_log:                    # $a0 = jogador, $a1 = codigo do log, $a2 = Pokemon
+    beq $a1, 0, fim_log         # nenhuma acao ainda
+    move $t0, $a0
+    move $t1, $a1
+    sll $t2, $a2, 2             # posicao * 4
+
+    bne $t0, 2, log_jogador
+    lw $t3, modo_jogo
+    bne $t3, 2, log_jogador
+    li $v0, 4
+    la $a0, log_inicio_ia
+    syscall
+    j log_pokemon
+
+log_jogador:
+    li $v0, 4
+    la $a0, log_inicio
+    syscall
+    li $v0, 1
+    move $a0, $t0
+    syscall
+log_pokemon:
+    li $v0, 4
+    la $a0, txt_traco
+    syscall
+    la $t3, vet_nome
+    add $t3, $t3, $t2
+    lw $a0, 0($t3)
+    li $v0, 4
+    syscall
+    li $v0, 4
+    la $a0, log_usou
+    syscall
+
+    beq $t1, 1, log_golpe1
+    beq $t1, 2, log_golpe2
+    beq $t1, 3, log_def
+    beq $t1, 4, log_usou_item
+    beq $t1, 5, log_bloq1
+    j log_bloq2
+
+log_golpe1:
+    la $t3, vet_golpe1
+    add $t3, $t3, $t2
+    lw $a0, 0($t3)
+    li $v0, 4
+    syscall
+    li $v0, 4
+    la $a0, log_dano20
+    syscall
+    j fim_log
+log_golpe2:
+    la $t3, vet_golpe2
+    add $t3, $t3, $t2
+    lw $a0, 0($t3)
+    li $v0, 4
+    syscall
+    li $v0, 4
+    la $a0, log_dano35
+    syscall
+    j fim_log
+log_def:
+    la $t3, vet_defesa
+    add $t3, $t3, $t2
+    lw $a0, 0($t3)
+    li $v0, 4
+    syscall
+    li $v0, 4
+    la $a0, log_defesa
+    syscall
+    j fim_log
+log_usou_item:
+    la $t3, vet_item
+    add $t3, $t3, $t2
+    lw $a0, 0($t3)
+    li $v0, 4
+    syscall
+    li $v0, 4
+    la $a0, log_item
+    syscall
+    j fim_log
+log_bloq1:
+    la $t3, vet_golpe1
+    add $t3, $t3, $t2
+    lw $a0, 0($t3)
+    li $v0, 4
+    syscall
+    li $v0, 4
+    la $a0, log_bloqueado
+    syscall
+    j fim_log
+log_bloq2:
+    la $t3, vet_golpe2
+    add $t3, $t3, $t2
+    lw $a0, 0($t3)
+    li $v0, 4
+    syscall
+    li $v0, 4
+    la $a0, log_bloqueado
+    syscall
+fim_log:
+    jr $ra
+
+tela_vitoria:                   # $a0 = jogador vencedor, $a1 = Pokemon
+    move $t0, $a0
+    sll $t1, $a1, 2
+
+    bne $t0, 2, vitoria_jogador
+    lw $t2, modo_jogo
+    bne $t2, 2, vitoria_jogador
+    li $v0, 4
+    la $a0, msg_vitoria_ia
+    syscall
+    j vitoria_pokemon
+
+vitoria_jogador:
+    li $v0, 4
+    la $a0, msg_vitoria_1
+    syscall
+    li $v0, 1
+    move $a0, $t0
+    syscall
+vitoria_pokemon:
+    li $v0, 4
+    la $a0, msg_turno_2         # imprime " ("
+    syscall
+    la $t2, vet_nome
+    add $t2, $t2, $t1
+    lw $a0, 0($t2)
+    li $v0, 4
+    syscall
+    li $v0, 4
+    la $a0, msg_vitoria_2
+    syscall
+    jr $ra
+
+desenha_cena:                   # $a0 = HP do J2, $a1 = HP do J1
+    addi $sp, $sp, -12          # abre espaco na pilha
+    sw $ra, 8($sp)              # salva o endereco de retorno
+    sw $s0, 4($sp)
+    sw $s1, 0($sp)
+    move $s0, $a0               # $s0 = HP do J2
+    move $s1, $a1               # $s1 = HP do J1
+
+    jal pinta_fundo
+
+    li $t0, 0x0080C068
+    sw $t0, cor_atual
+    li $a0, 35
+    li $a1, 23
+    li $a2, 26
+    li $a3, 3
+    jal desenha_retangulo
+    li $a0, 4
+    li $a1, 51
+    li $a2, 26
+    li $a3, 3
+    jal desenha_retangulo
+
+    li $a0, 40
+    li $a1, 9
+    lw $a2, j2_especie
+    jal desenha_pokemon
+
+    li $a0, 9
+    li $a1, 37
+    lw $a2, j1_especie
+    jal desenha_pokemon
+
+    li $a0, 4
+    li $a1, 8
+    move $a2, $s0
+    jal desenha_barra_bitmap
+    li $a0, 34
+    li $a1, 44
+    move $a2, $s1
+    jal desenha_barra_bitmap
+
+    lw $s1, 0($sp)
+    lw $s0, 4($sp)
+    lw $ra, 8($sp)              # recupera o endereco de retorno
+    addi $sp, $sp, 12           # devolve o espaco da pilha
+    jr $ra
+
+pinta_fundo:                    # pinta o ceu e a grama
+    la $t0, tela
+    li $t1, 0                   # pixel atual (0 a 4095)
+    li $t2, 0x00D8F0FF          # cor do ceu
+    li $t3, 0x00A8E088          # cor da grama
+pf_loop:
+    blt $t1, 1152, pf_ceu       # 18 linhas * 64 = 1152 pixels de ceu
+    sw $t3, 0($t0)
+    j pf_proximo
+pf_ceu:
+    sw $t2, 0($t0)
+pf_proximo:
+    addi $t0, $t0, 4
+    addi $t1, $t1, 1
+    blt $t1, 4096, pf_loop
+    jr $ra
+
+desenha_retangulo:              # $a0 = x, $a1 = y, $a2 = largura, $a3 = altura (cor em cor_atual)
+    lw $t9, cor_atual
+    li $t0, 0                   # linha
+dr_linha:
+    beq $t0, $a3, dr_fim
+    li $t1, 0                   # coluna
+dr_coluna:
+    beq $t1, $a2, dr_proxima_linha
+    add $t2, $a1, $t0           # y + linha
+    sll $t2, $t2, 6             # * 64
+    add $t2, $t2, $a0           # + x
+    add $t2, $t2, $t1           # + coluna
+    sll $t2, $t2, 2             # * 4 bytes = endereco do pixel
+    la $t3, tela
+    add $t2, $t2, $t3
+    sw $t9, 0($t2)              # pinta o pixel
+    addi $t1, $t1, 1
+    j dr_coluna
+dr_proxima_linha:
+    addi $t0, $t0, 1
+    j dr_linha
+dr_fim:
+    jr $ra
+
+desenha_pokemon:                # $a0 = x, $a1 = y, $a2 = Pokemon
+    sll $t0, $a2, 2
+    la $t1, vet_bitmap
+    add $t1, $t1, $t0
+    lw $t7, 0($t1)              # $t7 = endereco do sprite
+    li $t0, 0                   # linha
+dp_linha:
+    li $t1, 0                   # coluna
+dp_coluna:
+    lb $t2, 0($t7)              # indice da cor
+    addi $t7, $t7, 1
+    beq $t2, 0, dp_proximo      # 0 = transparente: nao pinta
+    sll $t2, $t2, 2
+    la $t3, paleta
+    add $t3, $t3, $t2
+    lw $t4, 0($t3)              # cor do pixel
+    add $t5, $a1, $t0
+    sll $t5, $t5, 6
+    add $t5, $t5, $a0
+    add $t5, $t5, $t1
+    sll $t5, $t5, 2
+    la $t6, tela
+    add $t5, $t5, $t6
+    sw $t4, 0($t5)              # pinta o pixel
+dp_proximo:
+    addi $t1, $t1, 1
+    blt $t1, 16, dp_coluna
+    addi $t0, $t0, 1
+    blt $t0, 16, dp_linha
+    jr $ra
+
+desenha_barra_bitmap:           # $a0 = x, $a1 = y, $a2 = HP
+    addi $sp, $sp, -16          # abre espaco na pilha
+    sw $ra, 12($sp)             # salva o endereco de retorno
+    sw $s0, 8($sp)
+    sw $s1, 4($sp)
+    sw $s2, 0($sp)
+    move $s0, $a0
+    move $s1, $a1
+    move $s2, $a2
+
+    li $t0, 0x00303030          # cor da moldura
+    sw $t0, cor_atual
+    move $a0, $s0
+    move $a1, $s1
+    li $a2, 26
+    li $a3, 5
+    jal desenha_retangulo
+
+    li $t0, 0x00C8C8C8          # cor do fundo da barra
+    sw $t0, cor_atual
+    addi $a0, $s0, 1
+    addi $a1, $s1, 1
+    li $a2, 24
+    li $a3, 3
+    jal desenha_retangulo
+
+    li $t0, 24                  # largura maxima da barra
+    mul $t1, $s2, $t0
+    addi $t1, $t1, 99           # arredonda para cima
+    li $t0, 100
+    div $t1, $t0
+    mflo $t1
+
+    li $t2, 0x0040C040          # verde
+    bgt $s2, 50, dbb_cor_ok     # HP > 50: fica verde
+    li $t2, 0x00E8C020          # amarelo
+    bgt $s2, 20, dbb_cor_ok
+    li $t2, 0x00E04040          # vermelho
+dbb_cor_ok:
+    sw $t2, cor_atual
+    addi $a0, $s0, 1
+    addi $a1, $s1, 1
+    move $a2, $t1
+    li $a3, 3
+    jal desenha_retangulo
+
+    lw $s2, 0($sp)
+    lw $s1, 4($sp)
+    lw $s0, 8($sp)
+    lw $ra, 12($sp)             # recupera o endereco de retorno
+    addi $sp, $sp, 16           # devolve o espaco da pilha
+    jr $ra
