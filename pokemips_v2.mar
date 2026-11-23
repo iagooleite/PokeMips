@@ -1,0 +1,866 @@
+.data
+    # VARIAVEIS DE SISTEMA (POWER POINTS)
+    j1_pp: .word 15
+    j2_pp: .word 15
+
+    # MODO DE JOGO: 1 = Jogador vs Jogador | 2 = Jogador vs IA (a IA controla o Jogador 2)
+    modo_jogo: .word 1
+
+    # POKEMON ESCOLHIDO POR CADA JOGADOR
+    j1_especie: .word 0
+    j2_especie: .word 0
+
+    # ACAO ESCOLHIDA NO TURNO
+    escolha_j1: .word 0
+    escolha_j2: .word 0
+
+    num_pokemon: .word 5
+
+    # POKEMON DISPONIVEIS
+    nome_pikachu:    .asciiz "PIKACHU"
+    nome_eevee:      .asciiz "EEVEE"
+    nome_charmander: .asciiz "CHARMANDER"
+    nome_squirtle:   .asciiz "SQUIRTLE"
+    nome_bulbasaur:  .asciiz "BULBASAUR"
+
+    #SPRITES
+    spr_pikachu:    .asciiz "|\\_/|\n(o.o)\n/>*<\\\n"
+    spr_eevee:      .asciiz "(\\_/)\n(^-^)\n(\")(\")\n"
+    spr_charmander: .asciiz " .-.\n(o.o)\n/)_(\\~*\n"
+    spr_squirtle:   .asciiz " .-.\n(o.o)\n{(_)}~\n"
+    spr_bulbasaur:  .asciiz ".@@@.\n(o.o)\n(\")(\")\n"
+
+    #GOLPES
+    g_choque:    .asciiz "Choque do Trovao"
+    g_cauda:     .asciiz "Cauda de Ferro"
+    g_investida: .asciiz "Investida"
+    g_mordida:   .asciiz "Mordida"
+    g_arranhao:  .asciiz "Arranhao"
+    g_brasas:    .asciiz "Brasas"
+    g_jato:      .asciiz "Jato de Agua"
+    g_chicote:   .asciiz "Chicote de Vinha"
+
+    d_protecao:  .asciiz "Protecao"
+    d_areia:     .asciiz "Ataque de Areia"
+    d_fumaca:    .asciiz "Cortina de Fumaca"
+    d_recolher:  .asciiz "Recolher"
+
+    i_oran:      .asciiz "Fruta Oran"
+    i_pocao:     .asciiz "Pocao"
+
+    # VETORES
+    vet_nome:   .word nome_pikachu, nome_eevee, nome_charmander, nome_squirtle, nome_bulbasaur
+    vet_sprite: .word spr_pikachu, spr_eevee, spr_charmander, spr_squirtle, spr_bulbasaur
+    vet_golpe1: .word g_choque, g_investida, g_arranhao, g_investida, g_investida
+    vet_golpe2: .word g_cauda, g_mordida, g_brasas, g_jato, g_chicote
+    vet_defesa: .word d_protecao, d_areia, d_fumaca, d_recolher, d_protecao
+    vet_item:   .word i_oran, i_pocao, i_oran, i_pocao, i_oran
+
+    # TEXTOS DA INTERFACE
+    vida_cheia: .asciiz "="
+    vida_vazia: .asciiz " "
+
+    clear_screen: .asciiz "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+
+    indent_j2:    .asciiz "\t\t\t"
+    indent_j1:    .asciiz "  "
+    txt_lv_j1:    .asciiz "  Lv5  (Jogador 1)\n"
+    txt_lv_j2:    .asciiz "  Lv5  (Jogador 2)\n"
+    txt_lv_ia:    .asciiz "  Lv5  (IA)\n"
+    txt_hp_abre:  .asciiz "HP: ["
+    txt_hp_fecha: .asciiz "] "
+    txt_hp_max:   .asciiz "/100\n"
+    separador:    .asciiz "==========================================\n"
+    quebra_linha: .asciiz "\n"
+
+    # TELA DE MODO DE JOGO
+    msg_modo: .asciiz "Escolha o modo de jogo:\n\n  1 - Jogador vs Jogador\n  2 - Jogador vs IA\n"
+
+    # TELA DE ESCOLHA
+    msg_escolha_1:   .asciiz "Jogador "
+    msg_escolha_2:   .asciiz ", escolha seu Pokemon:\n\n"
+    txt_item_lista:  .asciiz "  "
+    txt_traco:       .asciiz " - "
+    msg_sua_escolha: .asciiz "\nSua escolha: "
+
+    # MENU DO TURNO
+    msg_turno_1: .asciiz "\n> VEZ DO JOGADOR "
+    msg_turno_2: .asciiz " ("
+    msg_turno_3: .asciiz ") | PP Restante: "
+    txt_op1:     .asciiz "\n  1 - "
+    txt_op2:     .asciiz " (20 Dano)\n  2 - "
+    txt_op3:     .asciiz " (35 Dano) [-1 PP]\n  3 - "
+    txt_op4:     .asciiz " (Bloqueia o ataque do oponente) [-1 PP]\n  4 - "
+    txt_op_fim:  .asciiz " (Cura 30 HP - 1x)\nEscolha sua acao: "
+
+    msg_erro_input:    .asciiz "\n[ERRO] Opcao invalida! Tente novamente: "
+    msg_erro_item:     .asciiz "\n[ERRO] Este item ja foi utilizado nesta batalha!\n"
+    msg_erro_pp:       .asciiz "\n[ERRO] Pontos de Poder (PP) insuficientes para esta acao!\n"
+    msg_erro_hp_cheio: .asciiz "\n[ERRO] O HP ja esta cheio! O item seria desperdicado.\n"
+
+    # LOGS DA BATALHA 
+    log_inicio:    .asciiz "[LOG] J"
+    log_inicio_ia: .asciiz "[LOG] IA"
+    log_usou:      .asciiz " usou "
+    log_dano20:    .asciiz "! (-20 HP no oponente)\n"
+    log_dano35:    .asciiz "! (-35 HP no oponente)\n"
+    log_defesa:    .asciiz "!\n"
+    log_item:      .asciiz " e recuperou saude!\n"
+    log_bloqueado: .asciiz ", mas o oponente se defendeu! (0 Dano)\n"
+
+    # TELAS FINAIS
+    msg_vitoria_1:  .asciiz "\n==========================================\n   JOGADOR "
+    msg_vitoria_2:  .asciiz ") VENCEU A BATALHA!\n==========================================\n"
+    msg_vitoria_ia: .asciiz "\n==========================================\n   A IA"
+    msg_empate:     .asciiz "\n==========================================\n    AMBOS CAIRAM! A BATALHA EMPATOU!\n==========================================\n"
+
+    buffer_input: .space 4
+
+.text
+main:
+    # STATUS INICIAIS DA BATALHA
+    li $s0, 100        # $s0 = HP atual do Jogador 2 (cima)
+    li $s1, 100        # $s1 = HP atual do Jogador 1 (baixo)
+
+    li $s2, 0          # $s2 = codigo do log do Jogador 1 (0 = nada ainda)
+    li $s3, 0          # $s3 = codigo do log do Jogador 2
+                       # codigos: 1 golpe1 | 2 golpe2 | 3 defesa | 4 item
+                       #          5 golpe1 bloqueado | 6 golpe2 bloqueado
+
+    li $s6, 1          # $s6 = Item do Jogador 1 (1 = Disponivel, 0 = Usado)
+    li $s7, 1          # $s7 = Item do Jogador 2 (1 = Disponivel, 0 = Usado)
+
+    # ESCOLHA DO MODO DE JOGO
+    li $v0, 4
+    la $a0, clear_screen
+    syscall
+    li $v0, 4
+    la $a0, msg_modo
+    syscall
+    li $v0, 4
+    la $a0, msg_sua_escolha
+    syscall
+
+    li $a0, 1
+    li $a1, 2
+    jal le_opcao             # so volta com 1 ou 2
+    sw $v0, modo_jogo
+
+    # ESCOLHA DOS POKEMON
+    li $a0, 1
+    jal escolhe_pokemon
+    sw $v0, j1_especie
+
+    lw $t0, modo_jogo
+    beq $t0, 2, ia_escolhe_pokemon
+
+    li $a0, 2
+    jal escolhe_pokemon
+    sw $v0, j2_especie
+    j loop_batalha
+
+ia_escolhe_pokemon:
+    # A IA sorteia um dos Pokemon da lista
+    li $v0, 42               
+    li $a0, 0               
+    lw $a1, num_pokemon      
+    syscall
+    sw $a0, j2_especie       # o numero sorteado volta em $a0
+    j loop_batalha
+
+loop_batalha:
+    jal render_tela
+
+    beq $s0, 0, check_empate_tela
+    beq $s1, 0, vitoria_j2
+    j coleta_de_inputs       # Se ninguem caiu, continua o jogo
+
+check_empate_tela:
+    beq $s1, 0, tela_empate
+    j vitoria_j1
+
+
+    # COLETA DE INPUTS
+coleta_de_inputs:
+input_j1:
+    li $a0, 1
+    lw $a1, j1_especie
+    lw $a2, j1_pp
+    jal imprime_menu
+
+    li $a0, 1
+    li $a1, 4
+    jal le_opcao             # so volta com um numero de 1 a 4
+    move $t8, $v0
+    sw $t8, escolha_j1       # guarda na memoria
+
+    beq $t8, 1, prepara_j2
+    beq $t8, 4, check_item_j1
+    j check_pp_j1
+
+check_pp_j1:
+    # Checa se ainda tem PP para usar a habilidade 2 ou 3
+    lw $t5, j1_pp
+    blez $t5, erro_pp_j1
+    subi $t5, $t5, 1        # Deduz 1 PP
+    sw $t5, j1_pp
+    j prepara_j2
+
+check_item_j1:
+    beq $s6, 0, erro_item_j1
+    beq $s1, 100, erro_hp_cheio_j1
+    j prepara_j2
+
+erro_item_j1:
+    li $v0, 4
+    la $a0, msg_erro_item
+    syscall
+    j input_j1
+
+erro_pp_j1:
+    li $v0, 4
+    la $a0, msg_erro_pp
+    syscall
+    j input_j1
+
+erro_hp_cheio_j1:
+    li $v0, 4
+    la $a0, msg_erro_hp_cheio
+    syscall
+    j input_j1
+
+prepara_j2:
+    lw $t0, modo_jogo
+    beq $t0, 2, vez_da_ia    # no modo IA, a IA escolhe sozinha
+    jal render_tela          # limpa a tela para esconder a escolha do J1
+
+input_j2:
+    li $a0, 2
+    lw $a1, j2_especie
+    lw $a2, j2_pp
+    jal imprime_menu
+
+    li $a0, 1
+    li $a1, 4
+    jal le_opcao
+    move $t9, $v0
+    sw $t9, escolha_j2
+
+    beq $t9, 1, fase_de_resolucao
+    beq $t9, 4, check_item_j2
+    j check_pp_j2
+
+check_pp_j2:
+    lw $t6, j2_pp
+    blez $t6, erro_pp_j2
+    subi $t6, $t6, 1        # Deduz 1 PP
+    sw $t6, j2_pp
+    j fase_de_resolucao
+
+check_item_j2:
+    beq $s7, 0, erro_item_j2
+    beq $s0, 100, erro_hp_cheio_j2
+    j fase_de_resolucao
+
+erro_item_j2:
+    li $v0, 4
+    la $a0, msg_erro_item
+    syscall
+    j input_j2
+
+erro_pp_j2:
+    li $v0, 4
+    la $a0, msg_erro_pp
+    syscall
+    j input_j2
+
+erro_hp_cheio_j2:
+    li $v0, 4
+    la $a0, msg_erro_hp_cheio
+    syscall
+    j input_j2
+
+    # VEZ DA IA (MODO JOGADOR VS IA)
+vez_da_ia:
+    li $v0, 42
+    li $a0, 0               
+    li $a1, 4                
+    syscall
+    addi $t9, $a0, 1        
+
+    beq $t9, 1, ia_confirma
+    beq $t9, 4, check_item_ia
+    j check_pp_ia
+
+check_pp_ia:
+    lw $t6, j2_pp
+    blez $t6, vez_da_ia      # sem PP sorteia de novo
+    subi $t6, $t6, 1         # Deduz 1 PP
+    sw $t6, j2_pp
+    j ia_confirma
+
+check_item_ia:
+    beq $s7, 0, vez_da_ia    # item ja usado sorteia de novo
+    beq $s0, 100, vez_da_ia  # HP cheio: sorteia de novo
+    j ia_confirma
+
+ia_confirma:
+    sw $t9, escolha_j2
+    j fase_de_resolucao
+
+    # GOLPES
+fase_de_resolucao:
+    lw $t8, escolha_j1     
+    lw $t9, escolha_j2
+
+    li $s4, 0   # Zera flag de Defesa do Jogador 1
+    li $s5, 0   # Zera flag de Defesa do Jogador 2
+
+    # Defesas e Itens do Jogador 1 primeiro
+    beq $t8, 3, j1_set_defesa
+    beq $t8, 4, j1_set_item
+    j check_j2_def_item
+
+j1_set_defesa:
+    li $s4, 1
+    li $s2, 3
+    j check_j2_def_item
+j1_set_item:
+    li $s6, 0
+    addi $s1, $s1, 30
+    ble $s1, 100, ok_item_j1
+    li $s1, 100
+ok_item_j1:
+    li $s2, 4
+
+check_j2_def_item:
+    # Defesas e Itens do Jogador 2
+    beq $t9, 3, j2_set_defesa
+    beq $t9, 4, j2_set_item
+    j processa_ataques
+
+j2_set_defesa:
+    li $s5, 1
+    li $s3, 3
+    j processa_ataques
+j2_set_item:
+    li $s7, 0
+    addi $s0, $s0, 30
+    ble $s0, 100, ok_item_j2
+    li $s0, 100
+ok_item_j2:
+    li $s3, 4
+
+processa_ataques:
+    # Resolve ataque do Jogador 1 
+    beq $t8, 1, j1_usa_atk1
+    beq $t8, 2, j1_usa_atk2
+    j processa_ataques_j2
+
+j1_usa_atk1:
+    beq $s5, 1, j1_bloqueado_atk1
+    subi $s0, $s0, 20
+    li $s2, 1
+    j processa_ataques_j2
+j1_usa_atk2:
+    beq $s5, 1, j1_bloqueado_atk2
+    subi $s0, $s0, 35
+    li $s2, 2
+    j processa_ataques_j2
+j1_bloqueado_atk1:
+    li $s2, 5
+    j processa_ataques_j2
+j1_bloqueado_atk2:
+    li $s2, 6
+
+processa_ataques_j2:
+    # Resolve ataque do Jogador 2 
+    beq $t9, 1, j2_usa_atk1
+    beq $t9, 2, j2_usa_atk2
+    j finaliza_turno
+
+j2_usa_atk1:
+    beq $s4, 1, j2_bloqueado_atk1
+    subi $s1, $s1, 20
+    li $s3, 1
+    j finaliza_turno
+j2_usa_atk2:
+    beq $s4, 1, j2_bloqueado_atk2
+    subi $s1, $s1, 35
+    li $s3, 2
+    j finaliza_turno
+j2_bloqueado_atk1:
+    li $s3, 5
+    j finaliza_turno
+j2_bloqueado_atk2:
+    li $s3, 6
+
+finaliza_turno:
+    # Previne que a vida fique negativa na interface visual
+    bge $s0, 0, checa_hp_j1
+    li $s0, 0
+checa_hp_j1:
+    bge $s1, 0, volta_loop
+    li $s1, 0
+
+volta_loop:
+    j loop_batalha
+
+# TELAS FINAIS DO JOGO
+vitoria_j1:
+    li $a0, 1
+    lw $a1, j1_especie
+    jal tela_vitoria
+    j fim_programa
+
+vitoria_j2:
+    li $a0, 2
+    lw $a1, j2_especie
+    jal tela_vitoria
+    j fim_programa
+
+tela_empate:
+    li $v0, 4
+    la $a0, msg_empate
+    syscall
+
+fim_programa:
+    li $v0, 10
+    syscall
+
+# PROCEDIMENTOS
+# escolhe_pokemon: Mostra a lista de Pokemon e retorna em $v0 a posicao escolhida (0 a 4).
+escolhe_pokemon:
+    addi $sp, $sp, -4
+    sw $ra, 0($sp)
+
+    move $t0, $a0           # $t0 = numero do jogador
+
+    li $v0, 4
+    la $a0, clear_screen
+    syscall
+    li $v0, 4
+    la $a0, msg_escolha_1
+    syscall
+    li $v0, 1
+    move $a0, $t0
+    syscall
+    li $v0, 4
+    la $a0, msg_escolha_2
+    syscall
+
+    li $t1, 0              
+    lw $t2, num_pokemon
+loop_lista:
+    beq $t1, $t2, fim_lista
+    li $v0, 4
+    la $a0, txt_item_lista
+    syscall
+    li $v0, 1
+    addi $a0, $t1, 1       
+    syscall
+    li $v0, 4
+    la $a0, txt_traco
+    syscall
+    sll $t3, $t1, 2        
+    la $t4, vet_nome
+    add $t4, $t4, $t3
+    lw $a0, 0($t4)
+    li $v0, 4
+    syscall
+    li $v0, 4
+    la $a0, quebra_linha
+    syscall
+    addi $t1, $t1, 1
+    j loop_lista
+fim_lista:
+    li $v0, 4
+    la $a0, msg_sua_escolha
+    syscall
+
+    li $a0, 1
+    lw $a1, num_pokemon
+    jal le_opcao
+    subi $v0, $v0, 1       
+
+    lw $ra, 0($sp)
+    addi $sp, $sp, 4
+    jr $ra
+
+# le_opcao: Le o texto e so aceita um digito seguido de enter.
+le_opcao:
+    move $t6, $a0           
+    move $t7, $a1           
+ler_de_novo:
+    li $v0, 8
+    la $a0, buffer_input
+    li $a1, 4
+    syscall
+    la $t0, buffer_input
+    lb $t1, 1($t0)          # 2o caractere precisa ser o enter
+    bne $t1, 10, opcao_invalida
+    lb $t1, 0($t0)
+    subi $t1, $t1, 48       # converte o caractere 
+    blt $t1, $t6, opcao_invalida
+    bgt $t1, $t7, opcao_invalida
+    move $v0, $t1
+    jr $ra
+opcao_invalida:
+    li $v0, 4
+    la $a0, msg_erro_input
+    syscall
+    j ler_de_novo
+
+# imprime_menu: Monta o menu com os golpes do Pokemon escolhido.
+imprime_menu:
+    move $t0, $a0
+    sll $t1, $a1, 2         
+    move $t2, $a2
+
+    li $v0, 4
+    la $a0, msg_turno_1
+    syscall
+    li $v0, 1
+    move $a0, $t0
+    syscall
+    li $v0, 4
+    la $a0, msg_turno_2
+    syscall
+    la $t3, vet_nome
+    add $t3, $t3, $t1
+    lw $a0, 0($t3)
+    li $v0, 4
+    syscall
+    li $v0, 4
+    la $a0, msg_turno_3
+    syscall
+    li $v0, 1
+    move $a0, $t2
+    syscall
+
+    li $v0, 4
+    la $a0, txt_op1
+    syscall
+    la $t3, vet_golpe1
+    add $t3, $t3, $t1
+    lw $a0, 0($t3)
+    li $v0, 4
+    syscall
+
+    li $v0, 4
+    la $a0, txt_op2
+    syscall
+    la $t3, vet_golpe2
+    add $t3, $t3, $t1
+    lw $a0, 0($t3)
+    li $v0, 4
+    syscall
+
+    li $v0, 4
+    la $a0, txt_op3
+    syscall
+    la $t3, vet_defesa
+    add $t3, $t3, $t1
+    lw $a0, 0($t3)
+    li $v0, 4
+    syscall
+
+    li $v0, 4
+    la $a0, txt_op4
+    syscall
+    la $t3, vet_item
+    add $t3, $t3, $t1
+    lw $a0, 0($t3)
+    li $v0, 4
+    syscall
+
+    li $v0, 4
+    la $a0, txt_op_fim
+    syscall
+    jr $ra
+
+# limpa a tela e desenha os dois Pokemon e os logs.
+render_tela:
+    addi $sp, $sp, -4
+    sw $ra, 0($sp)
+
+    # Limpa a tela
+    li $v0, 4
+    la $a0, clear_screen
+    syscall
+
+    # Renderiza JOGADOR 2
+    li $v0, 4
+    la $a0, indent_j2
+    syscall
+    lw $a0, j2_especie
+    jal imprime_nome
+    la $a0, txt_lv_j2
+    lw $t0, modo_jogo
+    bne $t0, 2, imprime_lv_j2
+    la $a0, txt_lv_ia        # no modo IA, mostra "(IA)" no lugar de "(Jogador 2)"
+imprime_lv_j2:
+    li $v0, 4
+    syscall
+    li $v0, 4
+    la $a0, indent_j2
+    syscall
+    move $a0, $s0
+    jal desenha_barra
+    lw $a0, j2_especie
+    la $a1, indent_j2
+    jal imprime_sprite
+    li $v0, 4
+    la $a0, quebra_linha
+    syscall
+
+    # Renderiza JOGADOR 1
+    lw $a0, j1_especie
+    la $a1, indent_j1
+    jal imprime_sprite
+    li $v0, 4
+    la $a0, indent_j1
+    syscall
+    lw $a0, j1_especie
+    jal imprime_nome
+    li $v0, 4
+    la $a0, txt_lv_j1
+    syscall
+    li $v0, 4
+    la $a0, indent_j1
+    syscall
+    move $a0, $s1
+    jal desenha_barra
+    li $v0, 4
+    la $a0, separador
+    syscall
+
+    # Imprime os logs da ultima rodada
+    li $a0, 1
+    move $a1, $s2
+    lw $a2, j1_especie
+    jal imprime_log
+    li $a0, 2
+    move $a1, $s3
+    lw $a2, j2_especie
+    jal imprime_log
+
+    lw $ra, 0($sp)
+    addi $sp, $sp, 4
+    jr $ra
+
+# desenha a barra de hp
+desenha_barra:
+    move $t0, $a0           # $t0 = HP
+
+    li $v0, 4
+    la $a0, txt_hp_abre
+    syscall
+
+    li $t3, 10
+    addi $t1, $t0, 9
+    div $t1, $t3
+    mflo $t1                # $t1 = blocos cheios
+    sub $t2, $t3, $t1       # $t2 = blocos vazios
+
+    li $t4, 0
+loop_vida_cheia:
+    beq $t4, $t1, fim_loop_vida_cheia
+    li $v0, 4
+    la $a0, vida_cheia
+    syscall
+    addi $t4, $t4, 1
+    j loop_vida_cheia
+fim_loop_vida_cheia:
+    li $t4, 0
+loop_vida_vazia:
+    beq $t4, $t2, fim_loop_vida_vazia
+    li $v0, 4
+    la $a0, vida_vazia
+    syscall
+    addi $t4, $t4, 1
+    j loop_vida_vazia
+fim_loop_vida_vazia:
+    li $v0, 4
+    la $a0, txt_hp_fecha
+    syscall
+    li $v0, 1
+    move $a0, $t0
+    syscall
+    li $v0, 4
+    la $a0, txt_hp_max
+    syscall
+    jr $ra
+
+imprime_nome:
+    sll $t0, $a0, 2
+    la $t1, vet_nome
+    add $t1, $t1, $t0
+    lw $a0, 0($t1)
+    li $v0, 4
+    syscall
+    jr $ra
+
+# imprime_sprite: Imprime o desenho caractere por caractere
+imprime_sprite:
+    sll $t0, $a0, 2
+    la $t1, vet_sprite
+    add $t1, $t1, $t0
+    lw $t0, 0($t1)          # $t0 = endereco do desenho
+    move $t1, $a1           
+    li $t3, 1               
+loop_sprite:
+    lb $t2, 0($t0)
+    beq $t2, 0, fim_sprite 
+    beq $t3, 0, imprime_char
+    li $v0, 4
+    move $a0, $t1
+    syscall
+    li $t3, 0
+imprime_char:
+    li $v0, 11
+    move $a0, $t2
+    syscall
+    bne $t2, 10, proximo_char
+    li $t3, 1
+proximo_char:
+    addi $t0, $t0, 1
+    j loop_sprite
+fim_sprite:
+    jr $ra
+
+imprime_log:
+    beq $a1, 0, fim_log     
+    move $t0, $a0
+    move $t1, $a1
+    sll $t2, $a2, 2         
+
+    bne $t0, 2, log_jogador
+    lw $t3, modo_jogo
+    bne $t3, 2, log_jogador
+    li $v0, 4
+    la $a0, log_inicio_ia
+    syscall
+    j log_pokemon
+
+log_jogador:
+    li $v0, 4
+    la $a0, log_inicio
+    syscall
+    li $v0, 1
+    move $a0, $t0
+    syscall
+log_pokemon:
+    li $v0, 4
+    la $a0, txt_traco
+    syscall
+    la $t3, vet_nome
+    add $t3, $t3, $t2
+    lw $a0, 0($t3)
+    li $v0, 4
+    syscall
+    li $v0, 4
+    la $a0, log_usou
+    syscall
+
+    beq $t1, 1, log_golpe1
+    beq $t1, 2, log_golpe2
+    beq $t1, 3, log_def
+    beq $t1, 4, log_usou_item
+    beq $t1, 5, log_bloq1
+    j log_bloq2
+
+log_golpe1:
+    la $t3, vet_golpe1
+    add $t3, $t3, $t2
+    lw $a0, 0($t3)
+    li $v0, 4
+    syscall
+    li $v0, 4
+    la $a0, log_dano20
+    syscall
+    j fim_log
+log_golpe2:
+    la $t3, vet_golpe2
+    add $t3, $t3, $t2
+    lw $a0, 0($t3)
+    li $v0, 4
+    syscall
+    li $v0, 4
+    la $a0, log_dano35
+    syscall
+    j fim_log
+log_def:
+    la $t3, vet_defesa
+    add $t3, $t3, $t2
+    lw $a0, 0($t3)
+    li $v0, 4
+    syscall
+    li $v0, 4
+    la $a0, log_defesa
+    syscall
+    j fim_log
+log_usou_item:
+    la $t3, vet_item
+    add $t3, $t3, $t2
+    lw $a0, 0($t3)
+    li $v0, 4
+    syscall
+    li $v0, 4
+    la $a0, log_item
+    syscall
+    j fim_log
+log_bloq1:
+    la $t3, vet_golpe1
+    add $t3, $t3, $t2
+    lw $a0, 0($t3)
+    li $v0, 4
+    syscall
+    li $v0, 4
+    la $a0, log_bloqueado
+    syscall
+    j fim_log
+log_bloq2:
+    la $t3, vet_golpe2
+    add $t3, $t3, $t2
+    lw $a0, 0($t3)
+    li $v0, 4
+    syscall
+    li $v0, 4
+    la $a0, log_bloqueado
+    syscall
+fim_log:
+    jr $ra
+
+tela_vitoria:
+    move $t0, $a0
+    sll $t1, $a1, 2
+
+    bne $t0, 2, vitoria_jogador
+    lw $t2, modo_jogo
+    bne $t2, 2, vitoria_jogador
+    li $v0, 4
+    la $a0, msg_vitoria_ia
+    syscall
+    j vitoria_pokemon
+
+vitoria_jogador:
+    li $v0, 4
+    la $a0, msg_vitoria_1
+    syscall
+    li $v0, 1
+    move $a0, $t0
+    syscall
+vitoria_pokemon:
+    li $v0, 4
+    la $a0, msg_turno_2     
+    syscall
+    la $t2, vet_nome
+    add $t2, $t2, $t1
+    lw $a0, 0($t2)
+    li $v0, 4
+    syscall
+    li $v0, 4
+    la $a0, msg_vitoria_2
+    syscall
+    jr $ra
