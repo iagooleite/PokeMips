@@ -1,0 +1,376 @@
+.data
+    # VARIÁVEIS DE SISTEMA (POWER POINTS)
+    pika_pp: .word 15
+    eevee_pp: .word 15
+
+    # TEXTOS DA INTERFACE
+    nome_eevee: .asciiz "\t\t\tEEVEE\n\t\t\tLv5\n\t\t\tHP: ["
+    fim_nome_eevee: .asciiz "]\n"
+    eevee: .asciiz "\t\t\t(\\_/)\n\t\t\t(^-^)\n\t\t\t(\")(\")\n\n"
+    
+    pikachu: .asciiz "  (\\_/)\t\tPIKACHU\n  (o.o)\t\tLv5\n  />*<\\\tHP: ["
+    pikachu_fim: .asciiz "]\n==========================================\n"
+    
+    vida_cheia: .asciiz "="
+    vida_vazia: .asciiz " "
+
+    clear_screen: .asciiz "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+
+
+    # TEXTOS DA LÓGICA DE TURNOS E MENUS
+    msg_turno_pika_1: .asciiz "\n> VEZ DO PIKACHU | PP Restante: "
+    msg_turno_pika_2: .asciiz "\n  1 - Choque do Trovao (20 Dano)\n  2 - Cauda de Ferro (35 Dano) [-1 PP]\n  3 - Protecao (Defende proximo ataque) [-1 PP]\n  4 - Fruta Oran (Cura 30 HP - 1x)\nEscolha sua acao: "
+    
+    msg_turno_eevee_1: .asciiz "\n> VEZ DO EEVEE | PP Restante: "
+    msg_turno_eevee_2: .asciiz "\n  1 - Investida (20 Dano)\n  2 - Mordida (35 Dano) [-1 PP]\n  3 - Ataque de Areia (Esquiva do proximo ataque) [-1 PP]\n  4 - Pocao (Cura 30 HP - 1x)\nEscolha sua acao: "
+    
+    msg_erro_input: .asciiz "\n[ERRO] Opcao invalida! Tente novamente.\n"
+    msg_erro_item: .asciiz "\n[ERRO] Este item ja foi utilizado nesta batalha!\n"
+    msg_erro_pp: .asciiz "\n[ERRO] Pontos de Poder (PP) insuficientes para esta acao!\n"
+    
+    msg_vazia: .asciiz "" 
+    
+    # LOGS DA BATALHA
+    msg_log_pika_atk1: .asciiz "[LOG] Pikachu usou Choque do Trovao! (-20 HP no Eevee)\n"
+    msg_log_pika_atk2: .asciiz "[LOG] Pikachu usou Cauda de Ferro! Super Efetivo! (-35 HP no Eevee)\n"
+    msg_log_pika_def:  .asciiz "[LOG] Pikachu usou Protecao e bloqueou a investida adversaria!\n"
+    msg_log_pika_item: .asciiz "[LOG] Pikachu consumiu a Fruta Oran e recuperou saude!\n"
+    msg_log_pika_block:.asciiz "[LOG] O ataque do Pikachu falhou pois o Eevee evadiu! (0 Dano)\n"
+
+    msg_log_eevee_atk1: .asciiz "[LOG] Eevee usou Investida! (-20 HP no Pikachu)\n"
+    msg_log_eevee_atk2: .asciiz "[LOG] Eevee usou Mordida! Acerto Critico! (-35 HP no Pikachu)\n"
+    msg_log_eevee_def:  .asciiz "[LOG] Eevee usou Ataque de Areia e preparou sua evasiva!\n"
+    msg_log_eevee_item: .asciiz "[LOG] Eevee utilizou uma Pocao e recuperou saude!\n"
+    msg_log_eevee_block:.asciiz "[LOG] O ataque do Eevee falhou contra a Protecao do Pikachu! (0 Dano)\n"
+    
+    msg_vitoria_pika: .asciiz "\n==========================================\n       PIKACHU VENCEU A BATALHA!\n==========================================\n"
+    msg_vitoria_eevee: .asciiz "\n==========================================\n        EEVEE VENCEU A BATALHA!\n==========================================\n"
+    msg_empate: .asciiz "\n==========================================\n    AMBOS CAIRAM! A BATALHA EMPATOU!\n==========================================\n"
+
+.text
+main:
+    # STATUS INICIAIS DA BATALHA
+    li $s0, 100        # $s0 = HP atual do Eevee
+    li $s1, 100        # $s1 = HP atual do Pikachu
+    
+    la $s2, msg_vazia  # $s2 = Log da acao do Pikachu
+    la $s3, msg_vazia  # $s3 = Log da acao do Eevee
+    
+    li $s6, 1          # $s6 = Item do Pikachu (1 = Disponivel, 0 = Usado)
+    li $s7, 1          # $s7 = Item do Eevee (1 = Disponivel, 0 = Usado)
+
+loop_batalha:
+    jal render_tela
+
+    beq $s0, 0, check_empate_tela
+    beq $s1, 0, vitoria_eevee
+    j coleta_de_inputs       # Se ninguem morreu, continua jogo
+
+check_empate_tela:
+    beq $s1, 0, tela_empate
+    j vitoria_pika
+
+
+    # FASE 1: COLETA DE INPUTS
+coleta_de_inputs:
+input_pika:
+    li $v0, 4
+    la $a0, msg_turno_pika_1
+    syscall
+    
+    li $v0, 1                # Imprime o Inteiro (PP atual)
+    lw $a0, pika_pp
+    syscall
+    
+    li $v0, 4
+    la $a0, msg_turno_pika_2
+    syscall
+    
+    li $v0, 5
+    syscall
+    move $t8, $v0           # $t8 guarda a escolha do Pikachu
+    
+    blt $t8, 1, erro_pika
+    bgt $t8, 4, erro_pika
+    beq $t8, 1, prepara_eevee
+    beq $t8, 4, check_item_pika
+    j check_pp_pika
+
+check_pp_pika:
+    # Checa se ainda tem PP para usar a habilidade 2 ou 3
+    lw $t5, pika_pp
+    blez $t5, erro_pp_pika
+    subi $t5, $t5, 1        # Deduz 1 PP
+    sw $t5, pika_pp
+    j prepara_eevee
+
+check_item_pika:
+    beq $s6, 0, erro_item_pika
+    j prepara_eevee
+
+erro_pika:
+    li $v0, 4
+    la $a0, msg_erro_input
+    syscall
+    j input_pika
+
+erro_item_pika:
+    li $v0, 4
+    la $a0, msg_erro_item
+    syscall
+    j input_pika
+
+erro_pp_pika:
+    li $v0, 4
+    la $a0, msg_erro_pp
+    syscall
+    j input_pika
+
+prepara_eevee:
+    jal render_tela
+
+input_eevee:
+    li $v0, 4
+    la $a0, msg_turno_eevee_1
+    syscall
+    
+    li $v0, 1                # Imprime o Inteiro (PP atual)
+    lw $a0, eevee_pp
+    syscall
+    
+    li $v0, 4
+    la $a0, msg_turno_eevee_2
+    syscall
+    
+    li $v0, 5
+    syscall
+    move $t9, $v0           # $t9 guarda a escolha do Eevee
+    
+    blt $t9, 1, erro_eevee
+    bgt $t9, 4, erro_eevee
+    beq $t9, 1, fase_de_resolucao
+    beq $t9, 4, check_item_eevee
+    j check_pp_eevee
+
+check_pp_eevee:
+    # Checa se ainda tem PP para usar a habilidade 2 ou 3
+    lw $t6, eevee_pp
+    blez $t6, erro_pp_eevee
+    subi $t6, $t6, 1        # Deduz 1 PP
+    sw $t6, eevee_pp
+    j fase_de_resolucao
+
+check_item_eevee:
+    beq $s7, 0, erro_item_eevee
+    j fase_de_resolucao
+    
+erro_eevee:
+    li $v0, 4
+    la $a0, msg_erro_input
+    syscall
+    j input_eevee
+    
+erro_item_eevee:
+    li $v0, 4
+    la $a0, msg_erro_item
+    syscall
+    j input_eevee
+    
+erro_pp_eevee:
+    li $v0, 4
+    la $a0, msg_erro_pp
+    syscall
+    j input_eevee
+
+    #FASE 2: GOLPESD
+fase_de_resolucao:
+    li $s4, 0   # Zera flag de Defesa do Pikachu (1=Defendendo)
+    li $s5, 0   # Zera flag de Defesa do Eevee (1=Defendendo)
+
+    #Defesas e Itens do Pikachu primeiro
+    beq $t8, 3, pika_set_defesa
+    beq $t8, 4, pika_set_item
+    j check_eevee_def_item
+
+pika_set_defesa:
+    li $s4, 1
+    la $s2, msg_log_pika_def
+    j check_eevee_def_item
+pika_set_item:
+    li $s6, 0
+    addi $s1, $s1, 30
+    ble $s1, 100, ok_item_pika
+    li $s1, 100
+ok_item_pika:
+    la $s2, msg_log_pika_item
+
+check_eevee_def_item:
+    #Defesas e Itens do Eevee
+    beq $t9, 3, eevee_set_defesa
+    beq $t9, 4, eevee_set_item
+    j processa_ataques
+
+eevee_set_defesa:
+    li $s5, 1
+    la $s3, msg_log_eevee_def
+    j processa_ataques
+eevee_set_item:
+    li $s7, 0
+    addi $s0, $s0, 30
+    ble $s0, 100, ok_item_eevee
+    li $s0, 100
+ok_item_eevee:
+    la $s3, msg_log_eevee_item
+
+processa_ataques:
+    #Resolve Ataque do Pikachu (cruza contra defesa do Eevee)
+    beq $t8, 1, pika_usa_atk1
+    beq $t8, 2, pika_usa_atk2
+    j processa_ataques_eevee
+
+pika_usa_atk1:
+    beq $s5, 1, pika_foi_bloqueado
+    subi $s0, $s0, 20
+    la $s2, msg_log_pika_atk1
+    j processa_ataques_eevee
+pika_usa_atk2:
+    beq $s5, 1, pika_foi_bloqueado
+    subi $s0, $s0, 35
+    la $s2, msg_log_pika_atk2
+    j processa_ataques_eevee
+pika_foi_bloqueado:
+    la $s2, msg_log_pika_block
+
+processa_ataques_eevee:
+    #Resolve Ataque do Eevee (cruza contra defesa do Pikachu)
+    beq $t9, 1, eevee_usa_atk1
+    beq $t9, 2, eevee_usa_atk2
+    j finaliza_turno
+
+eevee_usa_atk1:
+    beq $s4, 1, eevee_foi_bloqueado
+    subi $s1, $s1, 20
+    la $s3, msg_log_eevee_atk1
+    j finaliza_turno
+eevee_usa_atk2:
+    beq $s4, 1, eevee_foi_bloqueado
+    subi $s1, $s1, 35
+    la $s3, msg_log_eevee_atk2
+    j finaliza_turno
+eevee_foi_bloqueado:
+    la $s3, msg_log_eevee_block
+
+finaliza_turno:
+    #Previne que a vida fique negativa na interface visual
+    bge $s0, 0, clamp_pika
+    li $s0, 0
+clamp_pika:
+    bge $s1, 0, volta_loop
+    li $s1, 0
+
+volta_loop:
+    j loop_batalha
+
+# TELAS FINAIS DO JOGO
+vitoria_pika:
+    li $v0, 4
+    la $a0, msg_vitoria_pika
+    syscall
+    j fim_programa
+
+vitoria_eevee:
+    li $v0, 4
+    la $a0, msg_vitoria_eevee
+    syscall
+    j fim_programa
+    
+tela_empate:
+    li $v0, 4
+    la $a0, msg_empate
+    syscall
+
+fim_programa:
+    li $v0, 10
+    syscall
+
+
+render_tela:
+    #Limpa a tela
+    li $v0, 4
+    la $a0, clear_screen
+    syscall
+
+    #Renderiza EEVEE
+    li $v0, 4
+    la $a0, nome_eevee
+    syscall
+
+    li $t3, 10         
+    div $s0, $t3       
+    mflo $t1           
+    sub $t2, $t3, $t1  
+    li $t0, 0          
+loop_vida_eevee:
+    beq $t0, $t1, fim_loop_vida_eevee
+    li $v0, 4
+    la $a0, vida_cheia
+    syscall
+    addi $t0, $t0, 1
+    j loop_vida_eevee
+fim_loop_vida_eevee:
+    li $t4, 0        
+loop_vazio_eevee:
+    beq $t4, $t2, fim_loop_vazio_eevee
+    li $v0, 4
+    la $a0, vida_vazia
+    syscall
+    addi $t4, $t4, 1
+    j loop_vazio_eevee
+fim_loop_vazio_eevee:
+    li $v0, 4
+    la $a0, fim_nome_eevee
+    syscall
+
+    li $v0, 4
+    la $a0, eevee
+    syscall
+
+    #Renderiza PIKACHU
+    li $v0, 4
+    la $a0, pikachu
+    syscall
+
+    div $s1, $t3       
+    mflo $t1           
+    sub $t2, $t3, $t1  
+    li $t0, 0          
+loop_vida_pika:
+    beq $t0, $t1, fim_loop_vida_pika
+    li $v0, 4
+    la $a0, vida_cheia
+    syscall
+    addi $t0, $t0, 1
+    j loop_vida_pika
+fim_loop_vida_pika:
+    li $t4, 0          
+loop_vazio_pika:
+    beq $t4, $t2, fim_loop_vazio_pika
+    li $v0, 4
+    la $a0, vida_vazia
+    syscall
+    addi $t4, $t4, 1
+    j loop_vazio_pika
+fim_loop_vazio_pika:
+    li $v0, 4
+    la $a0, pikachu_fim
+    syscall
+
+    #Imprime os Logs da última rodada
+    li $v0, 4
+    move $a0, $s2
+    syscall
+    li $v0, 4
+    move $a0, $s3
+    syscall
+    
+    jr $ra
